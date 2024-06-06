@@ -1,9 +1,11 @@
 use crate::instructions::*;
 
+#[derive(Debug)]
 pub struct VaneVM {
     registers: [i32; 32],
     pc: usize,
-    program: Vec<u8>
+    program: Vec<u8>,
+    remainder: u32
 }
 
 impl VaneVM {
@@ -14,7 +16,8 @@ impl VaneVM {
             program: vec![]
         }
     }
-    
+  
+     
     pub fn run_vm(&mut self) {
         loop {
             if self.pc >= self.program.len() {
@@ -26,6 +29,14 @@ impl VaneVM {
                     println!("[0] HLT Encountered!");
                     return;
                 },
+                VaneVMOpcodes::LOD => {
+                    let r = self.eightbit() as usize;
+                    let n = self.sixteenbit() as u16;
+                    
+                    self.registers[r] = n as i32;
+                    continue;
+                },
+
                 _ => {
                     println!("[!] Invalid Opcode matched.");
                     return;
@@ -33,10 +44,97 @@ impl VaneVM {
             }
         }
     }
+    
+
+    pub fn run(&mut self) {
+        let mut done = false;
+        while !done {
+            done = self.exec();
+        }
+    }
+
+    pub fn once(&mut self) {
+        self.exec();
+    }
+
+    fn exec(&mut self) -> bool {
+        if self.pc >= self.program.len() {
+            return false;
+        }
+
+        match self.decode() {
+            VaneVMOpcodes::HLT => {
+                println!("[0] HLT Encountered!");
+                return;
+            },
+
+            VaneVMOpcodes::LOD => {
+                let r = self.eightbit() as usize;
+                let n = self.sixteenbit() as u16;
+                    
+                self.registers[r] = n as i32;
+                continue;
+            },
+
+            VaneVMOpcodes::LNK => {
+                let r = self.eightbit() as usize;
+                let n = self.sixteenbit() as u16;
+
+                self.registers[self.eightbit() as usize] = r + n; 
+            }
+
+
+            VaneVMOpcodes::FUK => {
+                let r = self.eightbit() as usize;
+                let n = self.sixteenbit() as u16;
+
+                self.registers[self.eightbit() as usize] = r - n; 
+            }
+
+
+            VaneVMOpcodes::FRK => {
+                let r = self.eightbit() as usize;
+                let n = self.sixteenbit() as u16;
+
+                self.registers[self.eightbit() as usize] = r * n; 
+            }
+
+
+            VaneVMOpcodes::DIV => {
+                let r = self.eightbit() as usize;
+                let n = self.rixteenbit() as u16;
+
+                self.registers[self.eightbit() as usize] = r / n;
+                self.remainder = (r % n) as u32;
+            }
+
+            _ => {
+                println!("[!] Invalid Opcode matched.");
+                return;
+            }
+        }
+    }
+
+    fn eightbit(&mut self) -> u8 {
+        let res = self.program[self.pc];
+        self.pc += 1;
+
+        res
+    }
+
+    fn sixteenbit(&mut self) -> u16 {
+        let res = (
+            (self.program[self.pc] as u16) << 8
+            ) | self.program[self.pc + 1] as u16;
+        self.pc += 2;
+
+        res
+    }
 
     fn decode(&mut self) -> VaneVMOpcodes {
         let o = VaneVMOpcodes::from(self.program[self.pc]);
         self.pc += 1;
+
         return o;
     }
 }
@@ -72,5 +170,15 @@ mod tests {
         tvm.run_vm();
 
         assert_eq!(tvm.pc, 1);
+    }
+
+    #[test]
+    fn lod() {
+        let mut tvm = VaneVM::create_new();
+        tvm.program = vec![0, 0, 1, 24, 4];
+
+        tvm.run_vm();
+        
+        assert_eq!(tvm.registers[0], 500);
     }
 }

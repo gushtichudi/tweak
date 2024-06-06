@@ -1,7 +1,12 @@
 #[derive(Debug, PartialEq)]
 pub enum VaneVMOpcodes {
     HLT,
-    IGL
+    IGL, 
+    LOD, // load
+    LNK, // +
+    FUK, // -
+    FRK, // *
+    DIV  // /
 }
 
 
