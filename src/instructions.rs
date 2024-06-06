@@ -3,6 +3,7 @@ pub enum VaneVMOpcodes {
     HLT,
     IGL, 
     LOD, // load
+    TWK, // jump
     LNK, // +
     FUK, // -
     FRK, // *

@@ -13,7 +13,8 @@ impl VaneVM {
         VaneVM {
             registers: [0; 32],
             pc: 0,
-            program: vec![]
+            program: vec![],
+            remainder: 0
         }
     }
   
@@ -73,7 +74,11 @@ impl VaneVM {
                 let n = self.sixteenbit() as u16;
                     
                 self.registers[r] = n as i32;
-                continue;
+            },
+
+            VaneVMOpcodes::TWK => {
+                let t = self.registers[self.eightbit() as usize];
+                self.pc = t as usize;
             },
 
             VaneVMOpcodes::LNK => {
@@ -81,7 +86,7 @@ impl VaneVM {
                 let n = self.sixteenbit() as u16;
 
                 self.registers[self.eightbit() as usize] = r + n; 
-            }
+            },
 
 
             VaneVMOpcodes::FUK => {
@@ -89,7 +94,7 @@ impl VaneVM {
                 let n = self.sixteenbit() as u16;
 
                 self.registers[self.eightbit() as usize] = r - n; 
-            }
+            },
 
 
             VaneVMOpcodes::FRK => {
@@ -97,16 +102,16 @@ impl VaneVM {
                 let n = self.sixteenbit() as u16;
 
                 self.registers[self.eightbit() as usize] = r * n; 
-            }
+            },
 
 
             VaneVMOpcodes::DIV => {
                 let r = self.eightbit() as usize;
-                let n = self.rixteenbit() as u16;
+                let n = self.sixteenbit() as u16;
 
                 self.registers[self.eightbit() as usize] = r / n;
                 self.remainder = (r % n) as u32;
-            }
+            },
 
             _ => {
                 println!("[!] Invalid Opcode matched.");
